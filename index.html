@@ -1,12 +1,10 @@
-import os
-
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fraction & Decimal Calculations Quest</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Math Mastery Quest</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
@@ -37,7 +35,7 @@ html_content = """<!DOCTYPE html>
         </div>
     </header>
 
-    <!-- MAIN QUESTION CONTAINER (ONE AT A TIME) -->
+    <!-- MAIN QUESTION CONTAINER -->
     <main class="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-center">
         <div id="quiz-card" class="bg-white rounded-3xl p-6 md:p-8 card-shadow border-4 border-indigo-200 transition-all duration-300">
             <!-- Header Tags -->
@@ -197,7 +195,7 @@ html_content = """<!DOCTYPE html>
                     const c = (id, ans) => (document.getElementById(id)?.value || '').trim() === String(ans);
                     const q3a = c('q3a1', 15) && c('q3a2', 15) && c('q3a3', 150);
                     const q3b = c('q3b1', 35) && c('q3b2', 35) && c('q3b3', 245);
-                    const q3c = c('q3c1', 11) && (c('q3c2', 99) || c('q3c2', 99)) && c('q3c3', 49);
+                    const q3c = c('q3c1', 11) && c('q3c2', 99) && c('q3c3', 49);
 
                     return {
                         isCorrect: q3a && q3b && q3c,
@@ -454,10 +452,3 @@ html_content = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-# Save index.html
-with open("index.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-print("index.html generated successfully.")
