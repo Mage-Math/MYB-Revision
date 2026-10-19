@@ -1,0 +1,463 @@
+import os
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction & Decimal Calculations Quest</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #f0f9ff;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <!-- TOP NAVIGATION & SCORE BOARD -->
+    <header class="max-w-3xl mx-auto w-full flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-6 border-2 border-indigo-100">
+        <div class="flex items-center space-x-2">
+            <span class="text-3xl">📐</span>
+            <h1 class="text-xl font-bold text-indigo-700">Math Mastery Quest</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div id="progress-badge" class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-full text-sm">
+                Question 1 of 8
+            </div>
+            <div class="flex items-center bg-yellow-100 text-yellow-800 font-bold px-3 py-1 rounded-full text-sm">
+                ⭐ <span id="star-count" class="ml-1">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN QUESTION CONTAINER (ONE AT A TIME) -->
+    <main class="max-w-3xl mx-auto w-full flex-grow flex flex-col justify-center">
+        <div id="quiz-card" class="bg-white rounded-3xl p-6 md:p-8 card-shadow border-4 border-indigo-200 transition-all duration-300">
+            <!-- Header Tags -->
+            <div class="flex justify-between items-start mb-4">
+                <span id="topic-tag" class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+                    Topic
+                </span>
+                <span id="stars-tag" class="text-yellow-500 font-bold text-sm">
+                    ⭐ 3 Stars
+                </span>
+            </div>
+
+            <!-- Question Title -->
+            <h2 id="question-title" class="text-xl md:text-2xl font-bold text-gray-800 mb-4">
+                Loading...
+            </h2>
+
+            <!-- Question Interactive Form -->
+            <div id="question-body" class="space-y-6 mb-6 text-gray-800">
+                <!-- Injected dynamically -->
+            </div>
+
+            <!-- Hint Box -->
+            <div id="hint-box" class="hidden mb-4 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
+                <p class="text-sm text-amber-800 font-semibold flex items-center">
+                    💡 <span id="hint-text" class="ml-2">Hint will appear here...</span>
+                </p>
+            </div>
+
+            <!-- Inline Solution Box -->
+            <div id="feedback-box" class="hidden mb-6 p-4 rounded-2xl transition-all">
+                <!-- Feedback injected dynamically -->
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-gray-100">
+                <button id="hint-btn" onclick="toggleHint()" class="w-full sm:w-auto text-amber-600 hover:text-amber-700 text-sm font-bold px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 transition">
+                    💡 Need a Hint?
+                </button>
+                <button id="check-btn" onclick="checkAnswer()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition transform active:scale-95">
+                    Check Answer ✨
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER NAV -->
+    <footer class="max-w-3xl mx-auto w-full flex justify-between items-center mt-6">
+        <button id="prev-btn" onclick="changeQuestion(-1)" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-5 py-2.5 rounded-xl transition disabled:opacity-30 disabled:cursor-not-allowed">
+            ⬅️ Back
+        </button>
+        <button id="next-btn" onclick="changeQuestion(1)" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition disabled:opacity-30">
+            Next ➡️
+        </button>
+    </footer>
+
+    <!-- INTERACTIVE JAVASCRIPT ENGINE -->
+    <script>
+        const questions = [
+            {
+                id: 1,
+                topic: "Fractions & Order of Operations",
+                stars: 3,
+                title: "Question 1: Guided Calculations 🧩",
+                body: `
+                    <p class="text-sm text-gray-600 mb-3">Work out these calculations. Fill in the boxes.</p>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) (1/2 + 5.5)² - 1</p>
+                            <p class="text-sm mt-1">⇒ (1/2 + 5 ½)² = (<input type="number" id="q1a1" class="w-16 p-1 border rounded text-center">)² = <input type="number" id="q1a2" class="w-16 p-1 border rounded text-center"> ⇒ <input type="number" id="q1a3" class="w-16 p-1 border rounded text-center"> - 1 = <input type="number" id="q1a4" class="w-16 p-1 border rounded text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) (3 ⅕ - 0.2)³ + 23</p>
+                            <p class="text-sm mt-1">⇒ (3 ⅕ - ⅕)³ = (<input type="number" id="q1b1" class="w-16 p-1 border rounded text-center">)³ = <input type="number" id="q1b2" class="w-16 p-1 border rounded text-center"> ⇒ <input type="number" id="q1b3" class="w-16 p-1 border rounded text-center"> + 23 = <input type="number" id="q1b4" class="w-16 p-1 border rounded text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 6² - (3 🥉/10 + 0.7)</p>
+                            <p class="text-sm mt-1">⇒ (3 🥉/10 + 7/10) = <input type="number" id="q1c1" class="w-16 p-1 border rounded text-center"> ⇒ 6² = <input type="number" id="q1c2" class="w-16 p-1 border rounded text-center"> ⇒ <input type="number" id="q1c3" class="w-16 p-1 border rounded text-center"> - <input type="number" id="q1c4" class="w-16 p-1 border rounded text-center"> = <input type="number" id="q1c5" class="w-16 p-1 border rounded text-center font-bold text-indigo-600"></p>
+                        </div>
+                    </div>
+                `,
+                hint: "1/2 + 5 ½ = 6. Then 6² = 36. 36 - 1 = 35!",
+                check: () => {
+                    const c = (id, ans) => (document.getElementById(id)?.value || '').trim() === String(ans);
+                    const q1a = c('q1a1', 6) && c('q1a2', 36) && c('q1a3', 36) && c('q1a4', 35);
+                    const q1b = c('q1b1', 3) && c('q1b2', 27) && c('q1b3', 27) && c('q1b4', 50);
+                    const q1c = c('q1c1', 4) && c('q1c2', 36) && c('q1c3', 36) && c('q1c4', 4) && c('q1c5', 32);
+
+                    return {
+                        isCorrect: q1a && q1b && q1c,
+                        explanation: `
+                            <b>(a)</b> (6)² = 36 ⇒ 36 - 1 = <b>35</b><br>
+                            <b>(b)</b> (3)³ = 27 ⇒ 27 + 23 = <b>50</b><br>
+                            <b>(c)</b> Bracket = 4, 6² = 36 ⇒ 36 - 4 = <b>32</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 2,
+                topic: "Mixed Operations Strategies",
+                stars: 3,
+                title: "Question 2: Calculate with Fraction Strategies 🔢",
+                body: `
+                    <div class="space-y-4">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) 6 × (3.25 + 4 ¾)</p>
+                            <input type="number" id="q2a" placeholder="Final Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) (2.1 + 4 ⁹/₁₀)²</p>
+                            <input type="number" id="q2b" placeholder="Final Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 4 × 3.2 - ⅘</p>
+                            <input type="number" id="q2c" step="any" placeholder="Final Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                    </div>
+                `,
+                hint: "(a) 3.25 + 4.75 = 8. (b) 2.1 + 4.9 = 7. (c) 12.8 - 0.8 = 12!",
+                check: () => {
+                    const v = id => (document.getElementById(id)?.value || '').trim();
+                    const ca = v('q2a') === '48';
+                    const cb = v('q2b') === '49';
+                    const cc = v('q2c') === '12';
+
+                    return {
+                        isCorrect: ca && cb && cc,
+                        explanation: `
+                            <b>(a)</b> 6 × 8 = <b>48</b><br>
+                            <b>(b)</b> (7)² = <b>49</b><br>
+                            <b>(c)</b> 12.8 - 0.8 = <b>12</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 3,
+                topic: "Fraction Multiplication Steps",
+                stars: 3,
+                title: "Question 3: Step-by-Step Multiplying ✖️",
+                body: `
+                    <div class="space-y-4 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) 1.5 × 2.5 × 40 ⇒ 3/2 × 5/2 = <input type="number" id="q3a1" class="w-12 p-1 border text-center"> / 4 ⇒ <input type="number" id="q3a2" class="w-12 p-1 border text-center"> × 10 = <input type="number" id="q3a3" class="w-16 p-1 border text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) 1.25 × 3 ½ × 56 ⇒ 5/4 × 7/2 = <input type="number" id="q3b1" class="w-12 p-1 border text-center"> / 8 ⇒ <input type="number" id="q3b2" class="w-12 p-1 border text-center"> × 7 = <input type="number" id="q3b3" class="w-16 p-1 border text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 2.75 × 18 ⇒ 2 ¾ × 18 = <input type="number" id="q3c1" class="w-12 p-1 border text-center"> / 4 × 18 = <input type="number" id="q3c2" class="w-12 p-1 border text-center"> / 2 = <input type="number" id="q3c3" class="w-12 p-1 border text-center font-bold"> ½</p>
+                        </div>
+                    </div>
+                `,
+                hint: "For 3a: 3/2 × 5/2 = 15/4. Then 15 × 10 = 150!",
+                check: () => {
+                    const c = (id, ans) => (document.getElementById(id)?.value || '').trim() === String(ans);
+                    const q3a = c('q3a1', 15) && c('q3a2', 15) && c('q3a3', 150);
+                    const q3b = c('q3b1', 35) && c('q3b2', 35) && c('q3b3', 245);
+                    const q3c = c('q3c1', 11) && (c('q3c2', 99) || c('q3c2', 99)) && c('q3c3', 49);
+
+                    return {
+                        isCorrect: q3a && q3b && q3c,
+                        explanation: `
+                            <b>(a)</b> 15/4 × 40 = 15 × 10 = <b>150</b><br>
+                            <b>(b)</b> 35/8 × 56 = 35 × 7 = <b>245</b><br>
+                            <b>(c)</b> 11/4 × 18 = 99/2 = <b>49 ½</b> (or 49.5)
+                        `
+                    };
+                }
+            },
+            {
+                id: 4,
+                topic: "Multiplication Applications",
+                stars: 3,
+                title: "Question 4: Multiplying Decimals & Fractions 🧮",
+                body: `
+                    <div class="space-y-4">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) 1.5 × 3.5 × 24</p>
+                            <input type="number" id="q4a" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) 2.25 × 1 ½ × 32</p>
+                            <input type="number" id="q4b" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 3.75 × 28</p>
+                            <input type="number" id="q4c" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                    </div>
+                `,
+                hint: "(a) (3/2) × (7/2) × 24 = (21/4) × 24 = 21 × 6 = 126!",
+                check: () => {
+                    const v = id => (document.getElementById(id)?.value || '').trim();
+                    const ca = v('q4a') === '126';
+                    const cb = v('q4b') === '108';
+                    const cc = v('q4c') === '105';
+
+                    return {
+                        isCorrect: ca && cb && cc,
+                        explanation: `
+                            <b>(a)</b> (21/4) × 24 = <b>126</b><br>
+                            <b>(b)</b> (9/4) × (3/2) × 32 = (27/8) × 32 = 27 × 4 = <b>108</b><br>
+                            <b>(c)</b> (15/4) × 28 = 15 × 7 = <b>105</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 5,
+                topic: "Method Critique & Volume",
+                stars: 4,
+                title: "Question 5: Cuboid Volume Methods 📦",
+                body: `
+                    <p class="text-sm text-gray-700">Cuboid Dimensions: 2.5 cm × 2.5 cm × L cm. Akeno converts to improper fractions. Dae breaks into integers + halves.</p>
+                    <div class="space-y-3 mt-3">
+                        <div>
+                            <label class="font-bold text-sm">(a) Critique methods:</label>
+                            <select id="q5a" class="w-full p-2 border rounded mt-1">
+                                <option value="">Select option...</option>
+                                <option value="correct">Both methods give correct answer (75 cm³)</option>
+                                <option value="wrong">One method is mathematically incorrect</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-sm">(c-i) If length = 14 cm, whose method is easier?</label>
+                            <select id="q5ci" class="w-full p-2 border rounded mt-1">
+                                <option value="">Select option...</option>
+                                <option value="akeno">Akeno's method (Fractions cancel cleanly with 14)</option>
+                                <option value="dae">Dae's method</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-sm">(c-ii) If length = 15 cm, calculate volume:</label>
+                            <input type="number" id="q5cii" step="any" placeholder="Volume in cm³..." class="w-full p-2 border rounded mt-1">
+                        </div>
+                    </div>
+                `,
+                hint: "Volume = 2.5 × 2.5 × 15 = 6.25 × 15 = 93.75 cm³!",
+                check: () => {
+                    const q5a = document.getElementById('q5a')?.value === 'correct';
+                    const q5ci = document.getElementById('q5ci')?.value === 'akeno';
+                    const q5cii = (document.getElementById('q5cii')?.value || '').trim() === '93.75';
+
+                    return {
+                        isCorrect: q5a && q5ci && q5cii,
+                        explanation: `
+                            <b>(a)</b> Both methods are mathematically sound.<br>
+                            <b>(c-i)</b> Akeno's fraction simplification is easier because 14 cancels with denominator 4.<br>
+                            <b>(c-ii)</b> Volume = (25/4) × 15 = 375/4 = <b>93.75 cm³</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 6,
+                topic: "Powers & Fraction Simplification",
+                stars: 3,
+                title: "Question 6: Powers and Decimals ⚡",
+                body: `
+                    <div class="space-y-4 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) 0.28 × 5² ⇒ (28/100) × 25 = <input type="number" id="q6a" class="w-16 p-1 border text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) 0.7 × 4 ²/₇ ⇒ (7/10) × (30/7) = <input type="number" id="q6b" class="w-16 p-1 border text-center font-bold text-indigo-600"></p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 1.3 × (4³ - 4) ⇒ (13/10) × 60 = <input type="number" id="q6c" class="w-16 p-1 border text-center font-bold text-indigo-600"></p>
+                        </div>
+                    </div>
+                `,
+                hint: "For 6c: 4³ - 4 = 64 - 4 = 60. Then (13/10) × 60 = 13 × 6 = 78!",
+                check: () => {
+                    const c = (id, ans) => (document.getElementById(id)?.value || '').trim() === String(ans);
+                    const q6a = c('q6a', 7);
+                    const q6b = c('q6b', 3);
+                    const q6c = c('q6c', 78);
+
+                    return {
+                        isCorrect: q6a && q6b && q6c,
+                        explanation: `
+                            <b>(a)</b> 28/4 = <b>7</b><br>
+                            <b>(b)</b> 30/10 = <b>3</b><br>
+                            <b>(c)</b> 13 × 6 = <b>78</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 7,
+                topic: "Advanced Strategy Applications",
+                stars: 3,
+                title: "Question 7: Solve Using Strategies 🌟",
+                body: `
+                    <div class="space-y-4">
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(a) 1.6 × ⅝</p>
+                            <input type="number" id="q7a" step="any" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(b) 0.81 × 1 ⅑</p>
+                            <input type="number" id="q7b" step="any" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-xl">
+                            <p class="font-bold">(c) 0.328 × 5³</p>
+                            <input type="number" id="q7c" step="any" placeholder="Answer..." class="p-2 border rounded w-full mt-1">
+                        </div>
+                    </div>
+                `,
+                hint: "(a) (16/10) × (5/8) = (2/1) × (1/2) = 1! (c) 0.328 × 125 = 41!",
+                check: () => {
+                    const v = id => (document.getElementById(id)?.value || '').trim();
+                    const ca = v('q7a') === '1';
+                    const cb = v('q7b') === '0.9' || v('q7b') === '.9';
+                    const cc = v('q7c') === '41';
+
+                    return {
+                        isCorrect: ca && cb && cc,
+                        explanation: `
+                            <b>(a)</b> (16/10) × (5/8) = 80/80 = <b>1</b><br>
+                            <b>(b)</b> (81/100) × (10/9) = 9/10 = <b>0.9</b><br>
+                            <b>(c)</b> 0.328 × 125 = <b>41</b>
+                        `
+                    };
+                }
+            },
+            {
+                id: 8,
+                topic: "Area Word Problem",
+                stars: 4,
+                title: "Question 8: Path Area Calculation 🧱",
+                body: `
+                    <p class="text-sm text-gray-700 mb-2">Path Dimensions: Length = 3.2 m, Width = ⅝ m. Calculate the area.</p>
+                    <div class="p-3 bg-gray-50 rounded-xl">
+                        <label class="font-bold text-sm">Area of path (m²):</label>
+                        <input type="number" id="q8" step="any" placeholder="Area in m²..." class="p-2 border rounded w-full mt-1">
+                    </div>
+                `,
+                hint: "Area = Length × Width = 3.2 × (5/8) = (32/10) × (5/8) = 2!",
+                check: () => {
+                    const v = (document.getElementById('q8')?.value || '').trim();
+                    const isCorrect = v === '2';
+
+                    return {
+                        isCorrect,
+                        explanation: isCorrect 
+                            ? "✅ <b>Correct!</b> Area = 3.2 × ⅝ = (32/10) × (5/8) = 160/80 = <b>2 m²</b>."
+                            : "❌ <b>Incorrect.</b> Solution: Area = (32/10) × (5/8) = (32 × 5) / (10 × 8) = 160 / 80 = <b>2 m²</b>."
+                    };
+                }
+            }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let completedQuestions = new Set();
+
+        function loadQuestion() {
+            const q = questions[currentIndex];
+            document.getElementById('topic-tag').innerText = q.topic;
+            document.getElementById('stars-tag').innerText = "⭐ " + q.stars + " Stars";
+            document.getElementById('question-title').innerText = q.title;
+            document.getElementById('question-body').innerHTML = q.body;
+            document.getElementById('hint-text').innerText = q.hint;
+            document.getElementById('hint-box').classList.add('hidden');
+            
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            feedbackBox.innerHTML = '';
+
+            document.getElementById('progress-badge').innerText = `Question ${currentIndex + 1} of ${questions.length}`;
+            document.getElementById('prev-btn').disabled = currentIndex === 0;
+            document.getElementById('next-btn').disabled = currentIndex === questions.length - 1;
+        }
+
+        function toggleHint() {
+            document.getElementById('hint-box').classList.toggle('hidden');
+        }
+
+        function checkAnswer() {
+            const q = questions[currentIndex];
+            const result = q.check();
+            const feedbackBox = document.getElementById('feedback-box');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-400', 'text-emerald-900', 'bg-rose-50', 'border-rose-400', 'text-rose-900');
+
+            if (result.isCorrect) {
+                feedbackBox.classList.add('bg-emerald-50', 'border-l-4', 'border-emerald-400', 'text-emerald-900');
+                if (!completedQuestions.has(q.id)) {
+                    completedQuestions.add(q.id);
+                    score += q.stars;
+                    document.getElementById('star-count').innerText = score;
+                }
+            } else {
+                feedbackBox.classList.add('bg-rose-50', 'border-l-4', 'border-rose-400', 'text-rose-900');
+            }
+
+            feedbackBox.innerHTML = `
+                <div class="font-bold text-base mb-1">${result.isCorrect ? "🎉 Excellent Work!" : "🔍 Worked Solution"}</div>
+                <div class="text-sm space-y-1">${result.explanation}</div>
+            `;
+        }
+
+        function changeQuestion(direction) {
+            currentIndex += direction;
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex >= questions.length) currentIndex = questions.length - 1;
+            loadQuestion();
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
+"""
+
+# Save index.html
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("index.html generated successfully.")
